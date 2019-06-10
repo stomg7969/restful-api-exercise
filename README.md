@@ -1,4 +1,5 @@
 # REST API exercise
+**Frontend is privatized since this is an exercise**
 
 ## This is my Node.js exercise restful API. 
 - _ExpressJS_
