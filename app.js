@@ -16,7 +16,13 @@ const bodyParser = require('body-parser');
 const feedRoutes = require('./routes/feed');
 // application/json
 app.use(bodyParser.json()) // it used to be bodyParser.urlencoded
-
+// CORS
+app.use((req, res, next) => {
+  // every response we send will have these headers.
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
 app.use('/feed', feedRoutes); // this calls routes.
-
 app.listen(8080);
