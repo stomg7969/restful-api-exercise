@@ -1,5 +1,4 @@
 # REST API exercise
-Link to Frontend repo for this app [ReactJS](https://github.com/stomg7969/reactjs-nodejs).
 
 ## This is my Node.js exercise restful API. 
 - _ExpressJS_
