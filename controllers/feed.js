@@ -39,14 +39,25 @@ exports.createPost = (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
+  if (!req.file) {
+    const error = new Error('No image provided');
+    error.statusCode = 422;
+    throw error;
+  }
+  const imageUrl = req.file.path;
   // req.body is coming from body parser.
   const { title, content } = req.body;
   const post = new Post({
     title,
     content,
-    imageUrl: 'images/blue.jpeg',
+    imageUrl,
     creator: { name: 'Nate' }
   });
+  // imageUrl is brought by Multer. It is not a json format. 
+  // So in the frontend, I have use FormData() object (by browser side javascript offers).
+  // by storing it, formData.append() will allow us to append data to the object.
+  // lastly, when fetching, formData will automatically set the headers.
+  // Also, body just becomes formData. (no Stringify.)
   post.save()
     .then(r => {
       console.log(r);
