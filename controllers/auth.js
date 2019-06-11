@@ -1,5 +1,8 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const { validationResult } = require('express-validator/check');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 
@@ -52,7 +55,14 @@ exports.login = (req, res, next) => {
         error.statusCode = 401;
         throw error;
       }
-
+      const token = jwt.sign({
+        email: loadedUser.email,
+        userId: loadedUser._id.toString()
+      },
+        process.env.SECRET_KEY,
+        { expiresIn: '1h' } // Make it expire in one hour. Nice security mechanism.
+      ); // change to jwt. DO NOT PASS SENSITIVE INFORMATION.
+      res.status(200).json({ token, userId: loadedUser._id.toString() });
     })
     .catch(err => {
       if (!err.statusCode) {
