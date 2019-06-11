@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const Post = require('../models/post');
+const User = require('../models/user');
 
 exports.getPosts = (req, res, next) => {
   // if req.query.page is undefined, set to 1 as default.
@@ -60,11 +61,13 @@ exports.createPost = (req, res, next) => {
   const imageUrl = req.file.path;
   // req.body is coming from body parser.
   const { title, content } = req.body;
+  let creator;
   const post = new Post({
     title,
     content,
     imageUrl,
-    creator: { name: 'Nate' }
+    creator: req.userId
+    // userId is stored from decoding jwt token in the middleware is-auth.js
   });
   // imageUrl is brought by Multer. It is not a json format. 
   // So in the frontend, I have use FormData() object (by browser side javascript offers).
@@ -72,11 +75,20 @@ exports.createPost = (req, res, next) => {
   // lastly, when fetching, formData will automatically set the headers.
   // Also, body just becomes formData. (no Stringify.)
   post.save()
+    .then(r => User.findById(req.userId))
+    .then(user => {
+      creator = user; // made it global scope to use it in the other function.
+      user.posts.push(post);
+      return user.save();
+    })
     .then(r => {
-      console.log('Posted!', r);
       res.status(201).json({
         message: 'Post created successfully!',
-        post: r
+        post: post,
+        creator: {
+          _id: creator._id,
+          name: creator.name
+        }
       });
     })
     .catch(err => {
