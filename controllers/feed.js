@@ -125,6 +125,12 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      if (post.creator.toString() !== req.userId) {
+        // post.creator is ObjectId. so It returns id, but I can still get an access like name and email and so on.
+        const error = new Error('Not authorized.');
+        error.statusCode = 403;
+        throw error;
+      }
       if (imageUrl !== post.imageUrl) {
         // If image is newly uploaded, it will not be the same as post.imageUrl.
         // so, it will trigger this function whenever I upload a new image. Then delete the old image.
@@ -154,9 +160,23 @@ exports.deletePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      if (post.creator.toString() !== req.userId) {
+        // post.creator is ObjectId. so It returns id, but I can still get an access like name and email and so on.
+        const error = new Error('Not authorized.');
+        error.statusCode = 403;
+        throw error;
+      }
       // Check if it's the right user --> delete post --> delete image.
       clearImage(post.imageUrl);
       return Post.findByIdAndRemove(postId);
+    })
+    .then(r => {
+      return User.findById(req.userId);
+    })
+    .then(user => {
+      user.posts.pull(postId); // Reason for this line is to also delete association. Before this when deleting post, 
+      // ... it deletes posts, but not the id that is associated to the user.
+      return user.save();
     })
     .then(r => res.status(200).json({ message: 'Post deleted' }))
     .catch(err => {
