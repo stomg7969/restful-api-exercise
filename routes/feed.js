@@ -7,6 +7,8 @@ const feedController = require('../controllers/feed');
 
 // All routes start with /feed/
 router.get('/posts', feedController.getPosts);
+
+router.get('/post/:postId', feedController.getPost);
 router.post(
   '/post',
   [
