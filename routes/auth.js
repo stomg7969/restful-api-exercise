@@ -23,7 +23,7 @@ router.put(
           })
       })
       .normalizeEmail(),
-    body('password').trim().isLength({ min: 5 }),
+    body('password').trim().isLength({ min: 2 }),
     body('name').trim().not().isEmpty() // .not + .isEmpty === should not be empty.
   ],
   authController.signup

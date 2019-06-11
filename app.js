@@ -65,4 +65,4 @@ app.use((error, req, res, next) => {
 });
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
   .then(r => app.listen(8080))
-  .catch(err => console.log('erorrrrrrrr?????', err));
+  .catch(err => console.log('error?', err));
