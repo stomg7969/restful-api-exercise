@@ -5,9 +5,20 @@ const path = require('path');
 const Post = require('../models/post');
 
 exports.getPosts = (req, res, next) => {
+  // if req.query.page is undefined, set to 1 as default.
+  const currentPage = req.query.page || 1;
+  const numberOfPostsPerPage = 2;
+  let totalItems;
   Post.find()
+    .estimatedDocumentCount()
+    .then(count => {
+      totalItems = count;
+      return Post.find()
+        .skip((currentPage - 1) * numberOfPostsPerPage) // If I am on first page, then it becomes 0, so no skipping. if page 2, then skip that amount.
+        .limit(numberOfPostsPerPage); // limit the amount rendered.
+    })
     .then(posts => {
-      res.status(200).json({ posts });
+      res.status(200).json({ posts, totalItems });
     })
     .catch(err => {
       if (!err.statusCode) {
