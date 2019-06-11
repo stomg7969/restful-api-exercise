@@ -3,7 +3,7 @@ dotenv.config();
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-  const authHeader = req.get('Authorization');
+  const authHeader = req.get('Authorization'); // from the CORS middleware where I allowed.
   if (!authHeader) {
     const error = new Error('Not authorized.');
     error.statusCode = 401;
