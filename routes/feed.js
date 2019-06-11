@@ -19,7 +19,8 @@ router.post(
       .trim()
       .isLength({ min: 5 })
   ],
-  feedController.createPost);
+  feedController.createPost
+);
 
 // put / patch
 router.put('/post/:postId',
@@ -31,6 +32,8 @@ router.put('/post/:postId',
       .trim()
       .isLength({ min: 5 })
   ],
-  feedController.updatePost);
+  feedController.updatePost
+);
+router.delete('/post/:postId', feedController.deletePost);
 
 module.exports = router;

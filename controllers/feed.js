@@ -122,6 +122,27 @@ exports.updatePost = (req, res, next) => {
       next(err);
     });
 };
+exports.deletePost = (req, res, next) => {
+  const { postId } = req.params;
+  Post.findById(postId)
+    .then(post => {
+      if (!post) {
+        const error = new Error('No file picked.');
+        error.statusCode = 404;
+        throw error;
+      }
+      // Check if it's the right user --> delete post --> delete image.
+      clearImage(post.imageUrl);
+      return Post.findByIdAndRemove(postId);
+    })
+    .then(r => res.status(200).json({ message: 'Post deleted' }))
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
 
 const clearImage = filePath => {
   filePath = path.join(__dirname, '..', filePath);
