@@ -22,6 +22,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
+const authRoutes = require('./routes/auth');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -51,13 +52,16 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
-app.use('/feed', feedRoutes); // this calls routes.
+// These call routes.
+app.use('/feed', feedRoutes);
+app.use('/auth', authRoutes);
 // Error middleware that collects any incoming errors. (throw error || next(err)).
 app.use((error, req, res, next) => {
   console.log(error);
   const status = error.statusCode || 500;
   const message = error.message;
-  res.status(status).json({ message });
+  const data = error.data;
+  res.status(status).json({ message, data });
 });
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
   .then(r => app.listen(8080))
