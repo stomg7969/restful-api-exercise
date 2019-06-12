@@ -21,8 +21,10 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+// No more routes (deleted) when using GraphQL ==> npm install --save graphql express-graphql
+const graphqlHttp = require('express-graphql');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
 // fileStorage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -53,8 +55,13 @@ app.use((req, res, next) => {
   next();
 });
 // These call routes.
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
+// app.use('/feed', feedRoutes);
+// app.use('/auth', authRoutes);
+// GraphQL from here.
+app.use('/graphql', graphqlHttp({
+  schema: graphqlSchema,
+  rootValue: graphqlResolver
+}));
 // Error middleware that collects any incoming errors. (throw error || next(err)).
 app.use((error, req, res, next) => {
   console.log(error);
@@ -65,13 +72,6 @@ app.use((error, req, res, next) => {
 });
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
   .then(r => {
-    const server = app.listen(8080); // User this http ... pass it as arg in socket ... establish websocket connection.
-    const io = require('./socket').init(server); // Websocket --> npm install --save socket.io --> created helper file.
-    // do npm install --save socket.io-client ON THE FRONTEND project.
-    // import openSocket from 'socket.io-client'; ==> openSocket(<myURL>);
-    io.on('connection', socket => {
-      // Will not run this unless I have socket.io-client node in frontend.
-      console.log('Socket connected');
-    });
+    app.listen(8080);
   })
   .catch(err => console.log('error?', err));
