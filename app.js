@@ -60,7 +60,8 @@ app.use((req, res, next) => {
 // GraphQL from here.
 app.use('/graphql', graphqlHttp({
   schema: graphqlSchema,
-  rootValue: graphqlResolver
+  rootValue: graphqlResolver,
+  graphiql: true
 }));
 // Error middleware that collects any incoming errors. (throw error || next(err)).
 app.use((error, req, res, next) => {
