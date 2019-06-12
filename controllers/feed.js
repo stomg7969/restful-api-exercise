@@ -216,7 +216,12 @@ exports.deletePost = async (req, res, next) => {
     user.posts.pull(postId); // Reason for this line is to also delete association. Before this when deleting post, 
     // ... it deletes posts, but not the id that is associated to the user.
     await user.save();
-
+    // Socket.io ********** detail explanation in createPost method.
+    io.getIO().emit('posts', {
+      action: 'delete',
+      post: postId
+    });
+    // ********************
     res.status(200).json({ message: 'Post deleted' })
   } catch (err) {
     if (!err.statusCode) {
