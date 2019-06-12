@@ -25,6 +25,8 @@ const multer = require('multer');
 const graphqlHttp = require('express-graphql');
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolver = require('./graphql/resolvers');
+
+const auth = require('./middleware/auth');
 // fileStorage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -57,6 +59,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+app.use(auth);
 // These call routes.
 // app.use('/feed', feedRoutes);
 // app.use('/auth', authRoutes);
@@ -65,7 +68,7 @@ app.use('/graphql', graphqlHttp({
   schema: graphqlSchema,
   rootValue: graphqlResolver,
   graphiql: true,
-  formatError(err) {
+  customFormatErrorFn(err) {
     if (!err.originalError) {
       return err;
     }

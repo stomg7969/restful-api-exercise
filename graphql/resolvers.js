@@ -1,9 +1,13 @@
 // logics that will be executed for incoming queries.
 const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+const dotenv = require('dotenv');
+dotenv.config();
 // User input validator ==> npm install --save validator
 const validator = require('validator');
 
 const User = require('../models/user');
+const Post = require('../models/post');
 
 module.exports = {
   createUser({ userInput }, req) {
@@ -47,6 +51,73 @@ module.exports = {
           _id: createdUser._id.toString()
         };
       })
+  },
+  login: async function ({ email, password }) {
+    const user = await User.findOne({ email });
+    if (!user) {
+      const error = new Error('User not found');
+      error.code = 401;
+      throw error;
+    }
+    const confirmed = await bcrypt.compare(password, user.password)
+    if (!confirmed) {
+      const error = new Error('Incorrect password');
+      error.code = 401;
+      throw error;
+    }
+    const token = jwt.sign({
+      userId: user._id.toString(),
+      email: user.email
+    }, process.env.SECRET_KEY, { expiresIn: '1h' });
+    return {
+      token,
+      userId: user._id.toString()
+    };
+  },
+  createPost({ postInput }, req) {
+    if (!req.isAuth) {
+      const error = new Error('not authenticated');
+      error.code = 401;
+      throw error;
+    }
+    const errors = [];
+    if (validator.isEmpty(postInput.title) || !validator.isLength(postInput.title, { min: 3 })) {
+      errors.push({ message: 'Invalid Title' });
+    } else if (validator.isEmpty(postInput.content) || !validator.isLength(postInput.content, { min: 3 })) {
+      errors.push({ message: 'Invalid Content' });
+    }
+    if (errors.length > 0) {
+      const error = new Error('Invalid input.');
+      error.data = errors;
+      error.code = 422;
+      throw error;
+    }
+    User.findById(req.userId)
+      .then(user => {
+        if (!user) {
+          const error = new Error('Invalid user.');
+          error.data = errors;
+          error.code = 401;
+          throw error;
+        }
+        const post = new Post({
+          title: postInput.title,
+          content: postInput.content,
+          imageUrl: postInput.imageUrl,
+          creator: user
+        });
+        post.save()
+          .then(post => {
+            user.posts.push(post);
+            return {
+              ...post._doc,
+              _id: post._id.toString(),
+              createdAt: post.createdAt.toISOString(),
+              updatedAt: post.updatedAt.toISOString()
+            };
+          });
+      })
+
   }
 };
 // have to follow the same structure as schema.
