@@ -23,7 +23,7 @@ const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
-
+// fileStorage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'images');
@@ -64,5 +64,14 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message, data });
 });
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
-  .then(r => app.listen(8080))
+  .then(r => {
+    const server = app.listen(8080); // User this http ... pass it as arg in socket ... establish websocket connection.
+    const io = require('./socket').init(server); // Websocket --> npm install --save socket.io --> created helper file.
+    // do npm install --save socket.io-client ON THE FRONTEND project.
+    // import openSocket from 'socket.io-client'; ==> openSocket(<myURL>);
+    io.on('connection', socket => {
+      // Will not run this unless I have socket.io-client node in frontend.
+      console.log('Socket connected');
+    });
+  })
   .catch(err => console.log('error?', err));

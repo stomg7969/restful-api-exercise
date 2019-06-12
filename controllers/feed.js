@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator/check');
 const fs = require('fs');
 const path = require('path');
 
+const io = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
 // Async Await way instead of using .then()
@@ -36,9 +37,10 @@ exports.getPosts = async (req, res, next) => {
   */
 
   try {
-    const totalItems = await Post.find().estimatedDocumentCount;
+    const totalItems = await Post.find().estimatedDocumentCount();
     const posts = await Post.find()
       .populate('creator')
+      .sort({ createdAt: -1 }) // reverts the order of the posts.
       .skip((currentPage - 1) * numberOfPostsPerPage) // If I am on first page, then it becomes 0, so no skipping. if page 2, then skip that amount.
       .limit(numberOfPostsPerPage); // limit the amount rendered.
 
@@ -101,7 +103,21 @@ exports.createPost = async (req, res, next) => {
     const user = await User.findById(req.userId);
     user.posts.push(post);
     await user.save();
-
+    // Socket.io ********** .emit sends messages to all connected users.
+    // 'posts' in .emit must be the same in frontend too. ==> .on('posts);
+    io.getIO().emit('posts', {
+      action: 'create',
+      post: {
+        // _doc -> Stripping out all the other properties that come back with ...
+        // ... the document and only retrieving the fields that belong in the schema.
+        ...post._doc,
+        creator: {
+          _id: req.userId,
+          name: user.name
+        }
+      }
+    });
+    // ******************** .broadcast sends message to all connected users except one who sent the request.
     res.status(201).json({
       message: 'Post created successfully!',
       post: post,
@@ -139,13 +155,13 @@ exports.updatePost = async (req, res, next) => {
     throw error;
   }
   try {
-    const post = await Post.findById(postId)
+    const post = await Post.findById(postId).populate('creator');
     if (!post) {
       const error = new Error('No file picked.');
       error.statusCode = 404;
       throw error;
     }
-    if (post.creator.toString() !== req.userId) {
+    if (post.creator._id.toString() !== req.userId) {
       // post.creator is ObjectId. so It returns id, but I can still get an access like name and email and so on.
       const error = new Error('Not authorized.');
       error.statusCode = 403;
@@ -161,7 +177,12 @@ exports.updatePost = async (req, res, next) => {
     post.content = content;
 
     const result = await post.save();
-
+    // Socket.io ********** detail explanation in createPost method.
+    io.getIO().emit('posts', {
+      action: 'update',
+      post: result
+    });
+    // ********************
     res.status(200).json({ post: result });
   } catch (err) {
     if (!err.statusCode) {
