@@ -74,9 +74,9 @@ module.exports = {
       userId: user._id.toString()
     };
   },
-  createPost({ postInput }, req) {
+  createPost: async function ({ postInput }, req) {
     if (!req.isAuth) {
-      const error = new Error('not authenticated');
+      const error = new Error('Not authenticated');
       error.code = 401;
       throw error;
     }
@@ -92,32 +92,48 @@ module.exports = {
       error.code = 422;
       throw error;
     }
-    User.findById(req.userId)
-      .then(user => {
-        if (!user) {
-          const error = new Error('Invalid user.');
-          error.data = errors;
-          error.code = 401;
-          throw error;
-        }
-        const post = new Post({
-          title: postInput.title,
-          content: postInput.content,
-          imageUrl: postInput.imageUrl,
-          creator: user
-        });
-        post.save()
-          .then(post => {
-            user.posts.push(post);
-            return {
-              ...post._doc,
-              _id: post._id.toString(),
-              createdAt: post.createdAt.toISOString(),
-              updatedAt: post.updatedAt.toISOString()
-            };
-          });
-      })
+    const user = await User.findById(req.userId);
 
+    if (!user) {
+      const error = new Error('Invalid user.');
+      error.code = 401;
+      throw error;
+    }
+    const post = new Post({
+      title: postInput.title,
+      content: postInput.content,
+      imageUrl: postInput.imageUrl,
+      creator: user
+    });
+    const createdPost = await post.save();
+    user.posts.push(createdPost);
+    await user.save();
+    return {
+      ...createdPost._doc,
+      _id: createdPost._id.toString(),
+      createdAt: createdPost.createdAt.toISOString(),
+      updatedAt: createdPost.updatedAt.toISOString()
+    };
+  },
+  posts: async function (args, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated');
+      error.code = 401;
+      throw error;
+    }
+    const totalPosts = await Post.find().estimatedDocumentCount();
+    const posts = await Post.find().sort({ createdAt: -1 }).populate('creator');
+    return {
+      posts: posts.map(post => {
+        return {
+          ...post._doc,
+          _id: post.id.toString(),
+          createdAt: post.createdAt.toISOString(),
+          updatedAt: post.updatedAt.toISOString()
+        };
+      }),
+      totalPosts
+    }
   }
 };
 // have to follow the same structure as schema.
