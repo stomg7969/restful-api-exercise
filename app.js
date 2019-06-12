@@ -14,6 +14,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const MONGODB_URI = `mongodb+srv://${process.env.mongoID}:${process.env.mongoPW}@cluster0-kl0m7.mongodb.net/messages?retryWrites=true&w=majority`;
 
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -60,6 +61,19 @@ app.use((req, res, next) => {
   next();
 });
 app.use(auth);
+// graphql image. this works because we have multer already.
+app.put('/post-image', (req, res, next) => {
+  if (!req.isAuth) {
+    throw new Error('Not Authenticated.');
+  }
+  if (!req.file) {
+    return res.status(200).json({ message: "No file provided." });
+  }
+  if (req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+  return res.status(201).json({ message: 'File stored.', filePath: req.file.path });
+});
 // These call routes.
 // app.use('/feed', feedRoutes);
 // app.use('/auth', authRoutes);
@@ -95,3 +109,8 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
     app.listen(8080);
   })
   .catch(err => console.log('error?', err));
+
+const clearImage = filePath => {
+  filePath = path.join(__dirname, '..', filePath);
+  fs.unlink(filePath, err => console.log(err));
+};

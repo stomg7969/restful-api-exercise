@@ -45,10 +45,12 @@ module.exports = buildSchema(`
   }
   type RootQuery {
     login(email: String!, password: String!): AuthData!
-    posts: PostData!
+    posts(page: Int): PostData!
   }
   schema {
     query: RootQuery
     mutation: RootMutation
   }
 `);
+// in RootQuery, posts have page. This is for pagination purpose.
+// ... it doesn't require any args since it's just fetching.
