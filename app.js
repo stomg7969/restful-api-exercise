@@ -15,12 +15,15 @@ dotenv.config();
 const MONGODB_URI = `mongodb+srv://${process.env.mongoID}:${process.env.mongoPW}@cluster0-kl0m7.mongodb.net/messages?retryWrites=true&w=majority`;
 
 const path = require('path');
+// const fs = require('fs');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const helmet = require('helmet')
+// const helmet = require('helmet')
+// const compression = require('compression');
+// const morgan = require('morgan');
 
 // No more routes (deleted) when using GraphQL ==> npm install --save graphql express-graphql
 const graphqlHttp = require('express-graphql');
@@ -45,7 +48,11 @@ const fileFilter = (req, file, cb) => {
   }
 }
 // Server protector.
-app.use(helmet());
+// app.use(helmet());
+// app.use(compression());
+// const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+// app.use(morgan('combined', { stream: accessLogStream }));
+
 // application/json
 app.use(bodyParser.json()) // it used to be bodyParser.urlencoded
 app.use(multer({ storage, fileFilter }).single('image'));
