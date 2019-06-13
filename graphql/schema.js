@@ -59,3 +59,33 @@ module.exports = buildSchema(`
 `);
 // in RootQuery, posts have page. This is for pagination purpose.
 // ... it doesn't require any args since it's just fetching.
+// ||********************************************||
+// ||IMPORTANT NOTE FOR FRONTEND writing queries.||
+// ||********************************************|| 
+/*
+// This query is dynamic, but this can be optimized.
+// There is GraphQL syntax that I can use for dynamic queries.
+const graphqlQuery = {
+  query: `
+    mutation {
+      updateStatus(status: "${this.state.status}") {
+        status
+      }
+    }
+  `
+};
+// *********** This will become ... ***********
+const graphqlQuery = {
+  query: `
+    mutation StatusUpdate($status: String!) {
+      updateStatus(status: $status) {
+        status
+      }
+    }
+  `, (<-- comma here!!!!!)
+    variables: {
+      status: this.state.status
+    }
+};
+//
+*/
