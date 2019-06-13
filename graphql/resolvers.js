@@ -8,6 +8,7 @@ const validator = require('validator');
 
 const User = require('../models/user');
 const Post = require('../models/post');
+const { clearImage } = require('../helper/file');
 
 module.exports = {
   createUser({ userInput }, req) {
@@ -163,6 +164,11 @@ module.exports = {
     };
   },
   updatePost: async function ({ id, postInput }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated');
+      error.code = 401;
+      throw error;
+    }
     const post = await Post.findById(id).populate('creator');
     if (!post) {
       const error = new Error('No Post found');
@@ -198,6 +204,31 @@ module.exports = {
       createdAt: updatedPost.createdAt.toISOString(),
       updatedAt: updatedPost.updatedAt.toISOString()
     };
+  },
+  deletePost: async function ({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated');
+      error.code = 401;
+      throw error;
+    }
+    const post = await Post.findById(id);
+    if (!post) {
+      const error = new Error('No Post found');
+      error.code = 404;
+      throw error;
+    }
+    // Because I didn't populate('creator'), creator itself becomes an id.
+    if (post.creator.toString() !== req.userId.toString()) {
+      const error = new Error('Not Authorized');
+      error.code = 403;
+      throw error;
+    }
+    clearImage(post.imageUrl);
+    await Post.findByIdAndRemove(id);
+    const user = await User.findById(req.userId);
+    user.posts.pull(id);
+    await user.save();
+    return true;
   }
 };
 // have to follow the same structure as schema.

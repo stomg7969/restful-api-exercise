@@ -1,10 +1,9 @@
 const { validationResult } = require('express-validator/check');
-const fs = require('fs');
-const path = require('path');
 
 const io = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
+const { clearImage } = require('../helper/file');
 // Async Await way instead of using .then()
 exports.getPosts = async (req, res, next) => {
   // if req.query.page is undefined, set to 1 as default.
@@ -229,9 +228,4 @@ exports.deletePost = async (req, res, next) => {
     }
     next(err);
   }
-};
-
-const clearImage = filePath => {
-  filePath = path.join(__dirname, '..', filePath);
-  fs.unlink(filePath, err => console.log(err));
 };

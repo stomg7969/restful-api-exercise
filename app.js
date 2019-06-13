@@ -14,7 +14,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const MONGODB_URI = `mongodb+srv://${process.env.mongoID}:${process.env.mongoPW}@cluster0-kl0m7.mongodb.net/messages?retryWrites=true&w=majority`;
 
-const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -26,8 +25,8 @@ const multer = require('multer');
 const graphqlHttp = require('express-graphql');
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolver = require('./graphql/resolvers');
-
 const auth = require('./middleware/auth');
+const { clearImage } = require('./helper/file');
 // fileStorage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -109,8 +108,3 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
     app.listen(8080);
   })
   .catch(err => console.log('error?', err));
-
-const clearImage = filePath => {
-  filePath = path.join(__dirname, '..', filePath);
-  fs.unlink(filePath, err => console.log(err));
-};
