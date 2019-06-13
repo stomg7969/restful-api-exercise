@@ -20,6 +20,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const helmet = require('helmet')
 
 // No more routes (deleted) when using GraphQL ==> npm install --save graphql express-graphql
 const graphqlHttp = require('express-graphql');
@@ -43,6 +44,8 @@ const fileFilter = (req, file, cb) => {
     cb(null, false);
   }
 }
+// Server protector.
+app.use(helmet());
 // application/json
 app.use(bodyParser.json()) // it used to be bodyParser.urlencoded
 app.use(multer({ storage, fileFilter }).single('image'));
